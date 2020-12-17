@@ -2,8 +2,7 @@
 // Created by kinchi on 11/8/20.
 //
 
-#ifndef GAME_SERVER_TCP_PACKET_H
-#define GAME_SERVER_TCP_PACKET_H
+#pragma once
 
 
 #include <string>
@@ -23,9 +22,8 @@ struct Packet
 
     Packet(int Type, int Seq = 0, int Ack = 0): packet_type(Type), sequence_number(Seq), ack_number(Ack), buffer_size(0)
     {}
-};
 
-std::string transmitVersion(struct Packet pkt)
+    std::string transmitVersion(struct Packet pkt)
 {
         return std::to_string(pkt.packet_type) + ';' + std::to_string(pkt.sequence_number) + ';' + std::to_string(pkt.ack_number) + ';'
                + std::to_string(pkt.buffer_size) + ';' + pkt.message +';';
@@ -82,5 +80,5 @@ std::string display(struct Packet pkt)
     return temp;
 }
 
+};
 
-#endif //GAME_SERVER_TCP_PACKET_H

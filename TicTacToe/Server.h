@@ -1,6 +1,8 @@
 //
 // Created by Kinchi on 11/11/20.
 //
+#pragma once
+
 
 #ifndef GAME_SERVER_SERVER_H
 #define GAME_SERVER_SERVER_H
@@ -54,7 +56,7 @@ public:
 
     uint16_t sendMessage(uint16_t source_fd, const char *messageBuffer);
     uint16_t sendMessage(uint16_t source_fd, char *messageBuffer);
-    uint16_t sendMessageStr( std::string messageBuffer);
+    uint16_t sendMessageStr(uint16_t source_fd, std::string messageBuffer);
     std::vector<std::string> getHistory();
 
 private:

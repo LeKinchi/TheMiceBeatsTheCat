@@ -5,7 +5,9 @@
 #ifndef GAME_SERVER_CLIENT_H
 #define GAME_SERVER_CLIENT_H
 
-#include <cstdio>
+
+#pragma once
+
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
@@ -46,11 +48,6 @@ public:
     // Checks for new connection or new message
     void loop();
 
-    //callback setters
-    void onConnect( void (*ncc)(uint16_t fd) );
-    void onInput(void (*rc)(uint16_t fd, char *buffer));
-    void onDisconnect(void (*dc)(uint16_t fd));
-
     uint16_t sendMessage(const char *messageBuffer);
     uint16_t sendMessage(char *messageBuffer);
     uint16_t sendMessageStr( std::string messageBuffer);
@@ -58,7 +55,7 @@ public:
     std::vector<std::string> getHistory();
 private:
 
-    std::vector<std::string> message_history;
+    std::string last_message;
 
 
     struct hostent *server;
@@ -91,11 +88,6 @@ private:
     //input buffer
     char input_buffer[INPUT_BUFFER_SIZE];
 
-    void (*newConnectionCallback) (uint16_t fd);
-    void (*receiveCallback) (uint16_t fd, char *buffer);
-    void (*disconnectCallback) (uint16_t fd);
-
-
     //function prototypes
 
     // initializes socket address
@@ -104,12 +96,9 @@ private:
     //set option on socket to reuse-address
     void initializeSocket();
 
-    // binds associates socket with  local addr
+    // connect to outside host
     void connectSocket();
 
-
-    // Adds the new socket to masterfds and increment maxfd if needed
-    void handleNewConnection();
 
     // receives input from socket if not handles error and disconnect and remove from masterfds
     void recvInputFromExisting(int fd);

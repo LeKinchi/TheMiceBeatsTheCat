@@ -6,7 +6,6 @@
 namespace py = pybind11;
 
 
-
 PYBIND11_MODULE(gameServerClient, m) {
    py::class_<Client>(m, "Client")
         .def(py::init())

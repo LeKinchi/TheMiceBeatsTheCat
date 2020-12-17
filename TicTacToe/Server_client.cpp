@@ -26,11 +26,12 @@ Client::Client() {
 
 Client::Client(int port) {
     setup(port);
+    connectSocket();
 }
 
 Client::~Client() {
     #ifdef SERVER_DEBUG
-        std::cout << "[SERVER] [DESTRUCTOR] Destroying Server...\n";
+        std::cout << "[CLIENT] [DESTRUCTOR] Destroying Server...\n";
     #endif
     close(mastersocket_fd);
 }
@@ -41,8 +42,7 @@ void Client::setup(int port, std::string hostname ) {
         perror("Socket creation failed");
     }
 #ifdef SERVER_DEBUG
-    printf("[SERVER] [MISC] max fd = '%hu' \n", maxfd);
-    printf( "[SERVER] [MISC] file descriptor for new socket: '%hu'\n", mastersocket_fd);
+    printf( "[CLIENT] [MISC] file descriptor for socket: '%hu'\n", mastersocket_fd);
 #endif
     FD_ZERO(&masterfds);
     FD_ZERO(&tempfds);
@@ -68,18 +68,18 @@ void Client::setup(int port, std::string hostname ) {
 }
 
 void Client::initializeSocket() {
-    #ifdef SERVER_DEBUG
-        std::cout << "[SERVER] initializing socket\n";
-    #endif
-    int opt_value = 1;
-    int ret_test = setsockopt(mastersocket_fd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt_value, sizeof(int));
-    #ifdef SERVER_DEBUG
-        printf("[SERVER] setsockopt() ret %d\n", ret_test);
-    #endif
-    if (ret_test < 0) {
-        perror("[SERVER] [ERROR] setsockopt() failed");
-        shutdown();
-    }
+    // #ifdef SERVER_DEBUG
+    //     std::cout << "[CLIENT] initializing socket\n";
+    // #endif
+    // int opt_value = 1;
+    // int ret_test = setsockopt(mastersocket_fd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt_value, sizeof(int));
+    // #ifdef SERVER_DEBUG
+    //     printf("[CLIENT] setsockopt() ret %d\n", ret_test);
+    // #endif
+    // if (ret_test < 0) {
+    //     perror("[CLIENT] [ERROR] setsockopt() failed");
+    //     shutdown();
+    // }
 }
 
 void Client::connectSocket() {
@@ -100,39 +100,10 @@ void Client::connectSocket() {
 void Client::shutdown() {
     int close_ret = close(mastersocket_fd);
 #ifdef SERVER_DEBUG
-    printf("[SERVER] [DEBUG] [SHUTDOWN] closing master fd..  ret '%d'.\n",close_ret);
+    printf("[CLIENT] [DEBUG] [SHUTDOWN] closing master fd..  ret '%d'.\n",close_ret);
 #endif
 }
 
-void Client::handleNewConnection() {
-    #ifdef SERVER_DEBUG
-        std::cout << "[SERVER] [CONNECTION] handling new connection\n";
-    #endif
-
-    socklen_t addrlen = sizeof(client_addr);
-    tempsocket_fd = accept(mastersocket_fd, (struct sockaddr *) &client_addr, &addrlen);
-
-    if (tempsocket_fd < 0) {
-        perror("[SERVER] [ERROR] accept() failed");
-    } else {
-
-        FD_SET(tempsocket_fd, &masterfds);
-//        std::cout <<  masterfds << std::endl;
-        //increment the maximum known file descriptor (select() needs it)
-        if (tempsocket_fd > maxfd) {
-            maxfd = tempsocket_fd;
-            #ifdef SERVER_DEBUG
-                        std::cout << "[SERVER] incrementing maxfd to " << maxfd << std::endl;
-            #endif
-        }
-        #ifdef SERVER_DEBUG
-                printf("[SERVER] [CONNECTION] New connection on socket fd '%d'.\n",tempsocket_fd);
-        #endif
-    }
-    handShake(tempsocket_fd);
-    client_fd.insert(tempsocket_fd);
-//    newConnectionCallback(tempsocket_fd); //call the callback
-}
 
 void Client::recvInputFromExisting(int fd) {
     int nbytesrecv = recv(fd, input_buffer, INPUT_BUFFER_SIZE, 0);
@@ -144,16 +115,16 @@ void Client::recvInputFromExisting(int fd) {
             FD_CLR(fd, &masterfds);
             return;
         } else {
-            perror("[SERVER] [ERROR] recv() failed");
+            perror("[CLIENT] [ERROR] recv() failed");
         }
         close(fd); //close connection to client
         FD_CLR(fd, &masterfds); //clear the client fd from fd set
         return;
     }
     #ifdef SERVER_DEBUG
-        printf("[SERVER] [RECV] Received '%s' from client!\n", input_buffer);
+        printf("[CLIENT] [RECV] Received '%s' from client!\n", input_buffer);
     #endif
-    message_history.push_back(input_buffer);
+    // message_history.push_back(input_buffer);
 //    receiveCallback(fd, input_buffer);
     // std::string recieved(input_buffer);
     //memset(&input_buffer, 0, INPUT_BUFFER_SIZE); //zero buffer //bzero
@@ -161,59 +132,30 @@ void Client::recvInputFromExisting(int fd) {
 }
 
 std::vector<std::string> Client::getHistory(){
-    return message_history;
-}
-
-
-std::string Client::recvInputFromExistingStr(int fd) {
-    int nbytesrecv = recv(fd, input_buffer, INPUT_BUFFER_SIZE, 0);
-    if (nbytesrecv <= 0) {
-        //problem
-        if (0 == nbytesrecv) {
-//            disconnectCallback((uint16_t) fd);
-            close(fd); //well then, bye bye.
-            FD_CLR(fd, &masterfds);
-            return "";
-        } else {
-            perror("[SERVER] [ERROR] recv() failed");
-        }
-        close(fd); //close connection to client
-        FD_CLR(fd, &masterfds); //clear the client fd from fd set
-        return "";
-    }
-    #ifdef SERVER_DEBUG
-        printf("[SERVER] [RECV] Received '%s' from client!\n", input_buffer);
-    #endif
-//    receiveCallback(fd, input_buffer);
-    std::string recieved(input_buffer);
-    //memset(&input_buffer, 0, INPUT_BUFFER_SIZE); //zero buffer //bzero
-    bzero(&input_buffer, INPUT_BUFFER_SIZE); //clear input buffer
-    return recieved;
+    return std::vector<std::string>();
+    // message_history;
 }
 
 void Client::loop() {
     tempfds = masterfds; //copy fd_set for select()
     #ifdef SERVER_DEBUG
-        printf("[SERVER] [MISC] max fd = '%hu' \n", maxfd);
+        printf("[CLIENT] [MISC] max fd = '%hu' \n", maxfd);
         std::cout << "[SERVER] [MISC] calling select()\n";
     #endif
     int sel = select(maxfd + 1, &tempfds, NULL, NULL, NULL); //blocks until activity
     #ifdef SERVER_DEBUG
-    printf("[SERVER] [MISC] select() ret %d, processing...\n", sel);
+    printf("[CLIENT] [MISC] select() ret %d, processing...\n", sel);
     #endif
     if (sel < 0) {
-        perror("[SERVER] [ERROR] select() failed");
+        perror("[CLIENT] [ERROR] select() failed");
         shutdown();
     }
 
     //no problems, we're all set
-
     //loop the fd_set and check which socket has interactions available
     for (int i = 0; i <= maxfd; i++) {
         if (FD_ISSET(i, &tempfds)) { //if the socket has activity pending
             if (mastersocket_fd == i) {
-                //new connection on master socket
-                handleNewConnection();
             } else {
                 //exisiting connection has new data
                 recvInputFromExisting(i);
@@ -222,23 +164,6 @@ void Client::loop() {
     }
 }
 
-void Client::init() {
-    // initializeSocket();
-    connectSocket();
-    // startListen();
-}
-
-void Client::onInput(void (*rc)(uint16_t fd, char *buffer)) {
-    receiveCallback = rc;
-}
-
-void Client::onConnect( void(*ncc)(uint16_t) ) {
-    newConnectionCallback = ncc;
-}
-
-void Client::onDisconnect(void(*dc)(uint16_t)) {
-    disconnectCallback = dc;
-}
 
 uint16_t Client::sendMessage( char *messageBuffer) {
     return send(mastersocket_fd, messageBuffer, strlen(messageBuffer), 0);
@@ -279,27 +204,4 @@ void Client::handShake(int fd) {
     //         write(sockID, resp, strlen(resp));
     //     }
     // }
-}
-
-void Client::SendSyn(){
-  if (true)
-        { // send a  Syn
-            srand((unsigned)time(NULL));
-            sequence_number = rand() % 1000;
-
-            struct Packet response(1, sequence_number);
-            response.buffer_size = 50;
-            char resp[1024];
-            strcpy(resp, transmitVersion(response).c_str());
-            write(mastersocket_fd, resp, strlen(resp));
-
-
-            // bzero(buffer, 256);
-            // n = read(mastersocket_fd, buffer, 255);
-            // if (n == 0)
-            //     std::cout << "error reading incoming packet \n";
-            // current_packet = packetify(buffer);
-            // printf("Request recieved: \n\t Raw: %s \n\t Pro: %s", buffer, display(current_packet).c_str());
-        }
-
 }

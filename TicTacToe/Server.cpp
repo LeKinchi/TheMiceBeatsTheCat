@@ -250,8 +250,8 @@ uint16_t Server::sendMessage(uint16_t source_fd, const char *messageBuffer) {
     return send(source_fd, messageBuffer, strlen(messageBuffer), 0);
 }
 
-uint16_t Client::sendMessageStr( std::string messageBuffer) {
-    return send(mastersocket_fd, &messageBuffer[0], messageBuffer.length(), 0);
+uint16_t Server::sendMessageStr(uint16_t source_fd, std::string messageBuffer) {
+    return send(source_fd, &messageBuffer[0], messageBuffer.length(), 0);
 }
 
 void Server::handShake(int fd) {
