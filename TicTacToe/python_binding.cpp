@@ -18,7 +18,7 @@ PYBIND11_MODULE(gameServer, m) {
         .def(py::init())
         .def(py::init<int>())
         .def("loop", &Client::loop)
-        .def("init", &Client::init)
+        // .def("init", &Client::init)
         .def("sendMessageStr", &Client::sendMessageStr); 
 }
 

@@ -41,10 +41,6 @@ public:
     // closes the socket(mastersocket)
     void shutdown();
 
-    // It initializes the socket  by calling
-    //       initializeSocket(), bindSocket(),startListen()
-    void init();
-
     // Checks for new connection or new message
     void loop();
 
@@ -102,7 +98,6 @@ private:
 
     // receives input from socket if not handles error and disconnect and remove from masterfds
     void recvInputFromExisting(int fd);
-    std::string recvInputFromExistingStr(int fd);
 
     void handShake(int fd);
 

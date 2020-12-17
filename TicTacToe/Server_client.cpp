@@ -179,9 +179,9 @@ uint16_t Client::sendMessageStr( std::string messageBuffer) {
 
 
 void Client::handShake(int fd) {
-    std::string recieved = recvInputFromExistingStr(fd);
-    struct Packet pktRecieved = packetify(recieved);
-   
+
+    struct Packet pktRecieved;
+    pktRecieved = pktRecieved.packetify("recieved");
     if (pktRecieved.packet_type == 1) { // Resonding to Syn
         
         actual_buffer_size = actual_buffer_size < pktRecieved.buffer_size ? actual_buffer_size : pktRecieved.buffer_size;
@@ -190,8 +190,7 @@ void Client::handShake(int fd) {
         struct Packet response(2, sequence_number, pktRecieved.sequence_number + 1);
         response.buffer_size = actual_buffer_size;
 
-        char resp[1024];
-        write(fd, &transmitVersion(response)[0], transmitVersion(response).length());
+        write(fd, &(response.transmitVersion(response)[0]), response.transmitVersion(response).length());
     }
 
     // if (pkt.packet_type == 4)
